@@ -45,7 +45,7 @@ class class_job_bm_xml_feed_post_meta_xml_source{
             'id' => 'general',
             'title' => sprintf(__('%s General','job-board-manager'),'<i class="fas fa-briefcase"></i>'),
             'priority' => 1,
-            'active' => true,
+            'active' => false,
         );
 
 
@@ -53,7 +53,7 @@ class class_job_bm_xml_feed_post_meta_xml_source{
             'id' => 'fields',
             'title' => sprintf(__('%s Input fields','job-board-manager'),'<i class="fas fa-briefcase"></i>'),
             'priority' => 2,
-            'active' => false,
+            'active' => true,
         );
 
 

@@ -26,11 +26,23 @@ function job_bm_job_content_import_link($content){
 
         $xml_str = file_get_contents($xml_url);
 
+        ?>
+        <textarea style="width: 100%"><?php echo var_export($xml_str, true); ?></textarea>
+
+        <?php
+
+
         $re = '/<\w*:\w*>/';
 
         preg_match_all($re, $xml_str, $matches);
 
+
+
+
         $it = new RecursiveIteratorIterator(new RecursiveArrayIterator($matches));
+
+
+
 
         foreach($it as $v) {
 
@@ -59,21 +71,29 @@ function job_bm_job_content_import_link($content){
 
         $xml = new SimpleXMLElement($string);
 
-        $ns = $xml->getNamespaces(true);
-
         //echo '<pre>'.var_export($xml, true).'</pre>';
+
 
         ob_start();
         displayNode($xml, 0);
         $tags = ob_get_clean();
+        //echo '<pre>'.var_export($tags, true).'</pre>';
+
+        ?>
+<!--                <textarea style="width: 100%">--><?php //echo var_export($tags, true); ?><!--</textarea>-->
+        <!--        <textarea style="width: 100%">--><?php //echo var_export($tag_list_replace, true); ?><!--</textarea>-->
+        <!--        <textarea style="width: 100%">--><?php //echo var_export($string, true); ?><!--</textarea>-->
+        <!--        <br>-->
+        <?php
+
 
         $tags = explode(',', $tags);
         $tags = array_filter($tags);
 
         $tags_count = array_count_values($tags);
 
-        //echo '<pre>'.var_export($tags, true).'</pre>';
-        //echo '<pre>'.var_export($tags_count, true).'</pre>';
+
+        echo '<pre>'.var_export($tags_count, true).'</pre>';
 
 //
         $item_count = 0;
@@ -88,14 +108,14 @@ function job_bm_job_content_import_link($content){
 
             //echo $item->getName() . "<br>";
 
-            echo '########';
-            echo '<br>';
-            echo 'item_title: '.$item_title;
-            echo '<br>';
-            echo 'item_link: '.$item_link;
-            echo '<br>';
-            echo 'item_description: '.$item_description;
-            echo '<br>';
+//            echo '########';
+//            echo '<br>';
+//            echo 'item_title: '.$item_title;
+//            echo '<br>';
+//            echo 'item_link: '.$item_link;
+//            echo '<br>';
+//            echo 'item_description: '.$item_description;
+//            echo '<br>';
 
 
 

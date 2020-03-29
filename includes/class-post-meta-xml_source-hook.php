@@ -97,7 +97,57 @@ function job_bm_metabox_xml_source_content_general($job_id){
 
 
 }
+add_action('job_bm_metabox_xml_source_content_fields','job_bm_metabox_xml_source_content_xml');
 
+
+function job_bm_metabox_xml_source_content_xml($job_id){
+    $settings_tabs_field = new settings_tabs_field();
+
+    $xml_url = get_post_meta($job_id, 'xml_url', true);
+
+
+
+
+    ?>
+    <div class="section">
+        <div class="section-title"><?php echo __('XML source info','job-board-manager'); ?></div>
+        <p class="section-description"></p>
+
+        <div class="setting-field">
+            <?php
+
+            $response  = wp_remote_get($xml_url, array('timeout'     => 2));
+            if (  is_wp_error( $response ) ){
+
+                echo '<pre>'.var_export('There is a error.', true).'</pre>';
+
+                return;
+            }
+
+            $xml_string = file_get_contents($xml_url);
+
+            $xml = simplexml_load_string($xml_string);
+
+            ?>
+            <textarea style="width: 100%;"><?php echo '<pre>'.var_export($xml, true).'</pre>'; ?></textarea>
+            <?php
+
+            $xml_json = json_encode($xml);
+
+
+
+            ?>
+
+
+            <textarea style="width: 100%;"><?php echo '<pre>'.var_export($xml_json, true).'</pre>'; ?></textarea>
+
+
+
+        </div>
+    </div>
+
+    <?
+    }
 
 add_action('job_bm_metabox_xml_source_content_fields','job_bm_metabox_xml_source_content_fields');
 
