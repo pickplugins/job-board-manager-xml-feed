@@ -17,29 +17,85 @@ function job_bm_job_content_import_link($content){
         $next_check_datetime = get_post_meta($post_id, 'next_check_datetime', true);
 
         $response  = wp_remote_get($xml_url, array('timeout'     => 2));
-        if (  is_wp_error( $response ) ) return;
+        if (  is_wp_error( $response ) ){
+
+            echo '<pre>'.var_export('There is a error.', true).'</pre>';
+
+            return;
+        }
+
+        $xml_str = file_get_contents($xml_url);
+
+        $re = '/<\w*:\w*>/';
+
+        preg_match_all($re, $xml_str, $matches);
+
+        $it = new RecursiveIteratorIterator(new RecursiveArrayIterator($matches));
+
+        foreach($it as $v) {
+
+            $v_new = str_replace('<','', $v);
+            $v_naked = str_replace('>','', $v_new);
+            $v_new = str_replace(':','_', $v_naked);
+
+            $tag_list[] = $v_naked;
+            $tag_list_replace[] = $v_new;
+        }
 
 
-        $html_obj = simplexml_load_string(file_get_contents($xml_url));
-        $channel = isset($html_obj->channel)? $html_obj->channel : array();
-        $items = isset($channel->item)? $channel->item : array();
+        $string = str_replace(
+            $tag_list,
+            $tag_list_replace,
+            $xml_str
+        );
 
-        //echo '<pre>'.var_export($channel->item, true).'</pre>';
+        ?>
+        <textarea style="width: 100%"><?php echo var_export($tag_list, true); ?></textarea>
+        <textarea style="width: 100%"><?php echo var_export($tag_list_replace, true); ?></textarea>
+        <textarea style="width: 100%"><?php echo var_export($string, true); ?></textarea>
+        <br>
+        <?php
 
+
+        $xml = new SimpleXMLElement($string);
+
+        $ns = $xml->getNamespaces(true);
+
+        //echo '<pre>'.var_export($xml, true).'</pre>';
+
+        ob_start();
+        displayNode($xml, 0);
+        $tags = ob_get_clean();
+
+        $tags = explode(',', $tags);
+
+
+
+        echo '<pre>'.var_export($tags, true).'</pre>';
+
+//
         $item_count = 0;
-        foreach ($items as $item):
-
+        foreach ($xml->channel->item as $item):
+            
             //if($item_count > 1) return;
 
             $item_title = isset($item->title) ? (string)$item->title : '';
             $item_link = isset($item->link) ? (string)$item->link : '';
             $item_guid = isset($item->guid) ? (string)$item->guid : '';
             $item_description = isset($item->description) ? $item->description : '';
+            $item_content = isset($item->content) ? $item->content : '';
 
-            $post_id = isset($item['post-id']) ? $item['post-id'] : '';
+            //echo $item->getName() . "<br>";
+
+//            echo '########';
+//            echo '<br>';
+//            echo 'item_title: '.$item_title;
+//            echo '<br>';
+//            echo 'item_link: '.$item_link;
+//            echo '<br>';
 
 
-            echo '<pre>'.var_export($item, true).'</pre>';
+
 
 
         endforeach;
@@ -49,3 +105,42 @@ function job_bm_job_content_import_link($content){
     return $content;
 }
 
+function displayNode($node, $offset) {
+
+
+
+    if (is_object($node)) {
+        $node = get_object_vars($node);
+        foreach ($node as $key => $value) {
+            echo  $key;
+            echo  ',';
+            displayNode($value, $offset + 1);
+
+        }
+    } elseif (is_array($node)) {
+        foreach ($node as $key => $value) {
+            if (is_object($value)){
+                displayNode($value, $offset + 1);
+            }
+            else{
+                echo $key;
+                echo  ',';
+            }
+
+
+        }
+    }
+
+
+
+
+}
+
+
+function get_new_str($v, $v_new, $str) {
+
+    $str_new = str_replace($v, $v_new, $str);
+
+    return $str_new;
+
+}

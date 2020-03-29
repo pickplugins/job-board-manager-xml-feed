@@ -49,7 +49,12 @@ class class_job_bm_xml_feed_post_meta_xml_source{
         );
 
 
-
+        $job_bm_settings_tab[] = array(
+            'id' => 'fields',
+            'title' => sprintf(__('%s Input fields','job-board-manager'),'<i class="fas fa-briefcase"></i>'),
+            'priority' => 2,
+            'active' => false,
+        );
 
 
 
