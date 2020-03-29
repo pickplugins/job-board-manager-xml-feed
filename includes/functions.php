@@ -36,14 +36,9 @@ function job_bm_job_content_import_link($content){
 
         preg_match_all($re, $xml_str, $matches);
 
-
-
-
         $it = new RecursiveIteratorIterator(new RecursiveArrayIterator($matches));
 
-
-
-
+        if(!empty($it))
         foreach($it as $v) {
 
             $v_new = str_replace('<','', $v);
@@ -55,72 +50,52 @@ function job_bm_job_content_import_link($content){
         }
 
 
-        $string = str_replace(
-            $tag_list,
-            $tag_list_replace,
-            $xml_str
-        );
+        if(!empty($tag_list) || !empty($tag_list_replace)){
+            $string = str_replace(
+                $tag_list,
+                $tag_list_replace,
+                $xml_str
+            );
 
-        ?>
-<!--        <textarea style="width: 100%">--><?php //echo var_export($tag_list, true); ?><!--</textarea>-->
-<!--        <textarea style="width: 100%">--><?php //echo var_export($tag_list_replace, true); ?><!--</textarea>-->
-<!--        <textarea style="width: 100%">--><?php //echo var_export($string, true); ?><!--</textarea>-->
-<!--        <br>-->
-        <?php
-
-
-        $xml = new SimpleXMLElement($string);
-
-        //echo '<pre>'.var_export($xml, true).'</pre>';
+            ?>
+            <!--        <textarea style="width: 100%">--><?php //echo var_export($tag_list, true); ?><!--</textarea>-->
+            <!--        <textarea style="width: 100%">--><?php //echo var_export($tag_list_replace, true); ?><!--</textarea>-->
+            <!--        <textarea style="width: 100%">--><?php //echo var_export($string, true); ?><!--</textarea>-->
+            <!--        <br>-->
+            <?php
 
 
-        ob_start();
-        displayNode($xml, 0);
-        $tags = ob_get_clean();
-        //echo '<pre>'.var_export($tags, true).'</pre>';
+            $xml = new SimpleXMLElement($string);
 
-        ?>
-<!--                <textarea style="width: 100%">--><?php //echo var_export($tags, true); ?><!--</textarea>-->
-        <!--        <textarea style="width: 100%">--><?php //echo var_export($tag_list_replace, true); ?><!--</textarea>-->
-        <!--        <textarea style="width: 100%">--><?php //echo var_export($string, true); ?><!--</textarea>-->
-        <!--        <br>-->
-        <?php
+            //echo '<pre>'.var_export($xml, true).'</pre>';
 
 
-        $tags = explode(',', $tags);
-        $tags = array_filter($tags);
+            ob_start();
+            displayNode($xml, 0);
+            $tags = ob_get_clean();
+            //echo '<pre>'.var_export($tags, true).'</pre>';
 
-        $tags_count = array_count_values($tags);
+            ?>
+            <!--                <textarea style="width: 100%">--><?php //echo var_export($tags, true); ?><!--</textarea>-->
+            <!--        <textarea style="width: 100%">--><?php //echo var_export($tag_list_replace, true); ?><!--</textarea>-->
+            <!--        <textarea style="width: 100%">--><?php //echo var_export($string, true); ?><!--</textarea>-->
+            <!--        <br>-->
+            <?php
 
 
-        echo '<pre>'.var_export($tags_count, true).'</pre>';
+            $tags = explode(',', $tags);
+            $tags = array_filter($tags);
 
-//
-        $item_count = 0;
-        foreach ($xml->channel->item as $item):
+            $tags_count = array_count_values($tags);
 
-            //if($item_count > 1) return;
 
-            $item_title = isset($item->title) ? (string)$item->title : '';
-            $item_link = isset($item->link) ? (string)$item->link : '';
-            $item_guid = isset($item->guid) ? (string)$item->guid : '';
-            $item_description = isset($item->description) ? $item->description : '';
+            echo '<pre>'.var_export($tags_count, true).'</pre>';
 
-            //echo $item->getName() . "<br>";
-
-//            echo '########';
-//            echo '<br>';
-//            echo 'item_title: '.$item_title;
-//            echo '<br>';
-//            echo 'item_link: '.$item_link;
-//            echo '<br>';
-//            echo 'item_description: '.$item_description;
-//            echo '<br>';
+        }
 
 
 
 
-        endforeach;
 
     }
 

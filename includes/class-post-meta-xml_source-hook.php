@@ -100,6 +100,79 @@ function job_bm_metabox_xml_source_content_general($job_id){
 add_action('job_bm_metabox_xml_source_content_fields','job_bm_metabox_xml_source_content_xml');
 
 
+
+
+function get_json_keys($node, $offset=0) {
+
+    $json_keys = array();
+
+
+
+    if (is_array($node)) {
+        foreach ($node as $key => $value) {
+            if (is_array($value)){
+                $json_keys[$key] = get_json_keys($value, $offset + 1);
+            }
+            else{
+                $json_keys[$key] = $key;
+            }
+        }
+    }
+
+    return $json_keys;
+
+
+
+}
+
+
+function mygenerateTreeMenu($dir_array, $index, $limit = 0)
+{
+    $key = '';
+    if ($limit > 1000) return '';
+    $tree = '';
+
+    if(is_array($dir_array))
+    foreach ($dir_array as $key => $value)
+    {
+        if (!is_int($key))
+        {
+            $tree .= "<li>";
+            $tree .= "<input type='radio' value='$index/$key' name='tree-path'>";
+
+            if(is_array($value)){
+                $tree .= "<span class='action-open-close'>";
+                $tree .= "<span class='expand'><i class='far fa-plus-square'></i></span>";
+                $tree .= "<span class='collapse'><i class='far fa-minus-square'></i></span>";
+                $tree .= "</span>";
+            }
+
+
+            $tree .= "<a>$key</a>";
+            if(is_array($value)){
+                $tree .= '('.count($value).')';
+            }
+
+
+            $tree .= "<ul>";
+
+            $tree .= mygenerateTreeMenu($value, $key, $limit++);
+            $tree .= "</ul></li>\n";
+        }
+        else
+        {
+            //$tree .= mygenerateTreeMenu($value,$limit++);
+        }
+    }
+    return $tree;
+}
+
+
+
+
+
+
+
 function job_bm_metabox_xml_source_content_xml($job_id){
     $settings_tabs_field = new settings_tabs_field();
 
@@ -128,20 +201,94 @@ function job_bm_metabox_xml_source_content_xml($job_id){
 
             $xml = simplexml_load_string($xml_string);
 
-            ?>
-            <textarea style="width: 100%;"><?php echo '<pre>'.var_export($xml, true).'</pre>'; ?></textarea>
-            <?php
+//            ?>
+<!--            <textarea style="width: 100%;">--><?php //echo '<pre>'.var_export($xml, true).'</pre>'; ?><!--</textarea>-->
+<!--            --><?php
 
             $xml_json = json_encode($xml);
+            $xml_arr = json_decode($xml_json, true);
 
+            $keys = array_keys(json_decode($xml_json, true));
+
+
+
+
+            $json_keys = get_json_keys($xml_arr, 0);
+
+
+
+
+            echo "<ul class='tree-view'>\n";
+            $tree = mygenerateTreeMenu($json_keys, '', 100);
+            echo $tree;
+            echo "</ul>\n";
 
 
             ?>
 
 
-            <textarea style="width: 100%;"><?php echo '<pre>'.var_export($xml_json, true).'</pre>'; ?></textarea>
+            <textarea style="width: 100%;"><?php echo '<pre>'.var_export($json_keys, true).'</pre>'; ?></textarea>
+
+            <style type="text/css">
+                .tree-view{}
+                .tree-view li{
+                    border-left: 1px solid;
+                    padding: 5px 3px;
+                    margin: 0 0 2px 10px;
+                }
+                .tree-view li ul{
+                    display: none;
+                }
+
+                .tree-view .action-open-close{
+                    cursor: pointer;
+                }
 
 
+                .tree-view .expand{
+
+                }
+                .tree-view .action-open-close.active .expand{
+                    display: none;
+                }
+                .tree-view .action-open-close.active .collapse{
+                    display: inline-block;
+                }
+
+                .tree-view .collapse{
+                    cursor: pointer;
+                    display: none;
+                }
+                .tree-view a{
+                    margin-left: 5px;
+                }
+                .tree-view input[name='tree-path']{
+                    margin-left: 5px;
+                }
+
+
+
+            </style>
+
+            <script>
+                jQuery(document).ready(function($) {
+                    $(document).on('click', '.tree-view .action-open-close', function(){
+
+                        if($(this).hasClass('active')){
+                            $(this).removeClass('active');
+                            $(this).parent().children('ul').fadeOut();
+
+                        }else{
+                            $(this).addClass('active');
+                            $(this).parent().children('ul').fadeIn();
+                        }
+
+
+                        console.log('Hello');
+
+                    })
+                })
+            </script>
 
         </div>
     </div>
@@ -150,6 +297,12 @@ function job_bm_metabox_xml_source_content_xml($job_id){
     }
 
 add_action('job_bm_metabox_xml_source_content_fields','job_bm_metabox_xml_source_content_fields');
+
+
+
+
+
+
 
 
 function job_bm_metabox_xml_source_content_fields($job_id){
