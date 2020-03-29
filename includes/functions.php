@@ -50,10 +50,10 @@ function job_bm_job_content_import_link($content){
         );
 
         ?>
-        <textarea style="width: 100%"><?php echo var_export($tag_list, true); ?></textarea>
-        <textarea style="width: 100%"><?php echo var_export($tag_list_replace, true); ?></textarea>
-        <textarea style="width: 100%"><?php echo var_export($string, true); ?></textarea>
-        <br>
+<!--        <textarea style="width: 100%">--><?php //echo var_export($tag_list, true); ?><!--</textarea>-->
+<!--        <textarea style="width: 100%">--><?php //echo var_export($tag_list_replace, true); ?><!--</textarea>-->
+<!--        <textarea style="width: 100%">--><?php //echo var_export($string, true); ?><!--</textarea>-->
+<!--        <br>-->
         <?php
 
 
@@ -68,32 +68,34 @@ function job_bm_job_content_import_link($content){
         $tags = ob_get_clean();
 
         $tags = explode(',', $tags);
+        $tags = array_filter($tags);
 
+        $tags_count = array_count_values($tags);
 
-
-        echo '<pre>'.var_export($tags, true).'</pre>';
+        //echo '<pre>'.var_export($tags, true).'</pre>';
+        //echo '<pre>'.var_export($tags_count, true).'</pre>';
 
 //
         $item_count = 0;
         foreach ($xml->channel->item as $item):
-            
+
             //if($item_count > 1) return;
 
             $item_title = isset($item->title) ? (string)$item->title : '';
             $item_link = isset($item->link) ? (string)$item->link : '';
             $item_guid = isset($item->guid) ? (string)$item->guid : '';
             $item_description = isset($item->description) ? $item->description : '';
-            $item_content = isset($item->content) ? $item->content : '';
 
             //echo $item->getName() . "<br>";
 
-//            echo '########';
-//            echo '<br>';
-//            echo 'item_title: '.$item_title;
-//            echo '<br>';
-//            echo 'item_link: '.$item_link;
-//            echo '<br>';
-
+            echo '########';
+            echo '<br>';
+            echo 'item_title: '.$item_title;
+            echo '<br>';
+            echo 'item_link: '.$item_link;
+            echo '<br>';
+            echo 'item_description: '.$item_description;
+            echo '<br>';
 
 
 
