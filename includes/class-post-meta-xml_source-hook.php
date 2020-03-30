@@ -126,17 +126,15 @@ function get_json_keys($node, $offset=0) {
 }
 
 
-function mygenerateTreeMenu($dir_array, $index, $limit = 0)
-{
+function mygenerateTreeMenu($dir_array, $index, $limit = 0){
+
     $key = '';
     if ($limit > 1000) return '';
     $tree = '';
 
     if(is_array($dir_array))
-    foreach ($dir_array as $key => $value)
-    {
-        if (!is_int($key))
-        {
+    foreach ($dir_array as $key => $value){
+        if (!is_int($key)){
             $tree .= "<li>";
             $tree .= "<input type='radio' value='$index/$key' name='tree-path'>";
 
@@ -159,8 +157,7 @@ function mygenerateTreeMenu($dir_array, $index, $limit = 0)
             $tree .= mygenerateTreeMenu($value, $key, $limit++);
             $tree .= "</ul></li>\n";
         }
-        else
-        {
+        else{
             //$tree .= mygenerateTreeMenu($value,$limit++);
         }
     }
@@ -210,6 +207,85 @@ function job_bm_metabox_xml_source_content_xml($job_id){
 
             $keys = array_keys(json_decode($xml_json, true));
 
+            ?>
+            <script>
+
+
+
+                xml_json = <?php echo $xml_json; ?>;
+
+                jQuery(document).ready(function($) {
+                    $(document).on('click', '.tree-view input', function(){
+                        index = $(this).val();
+
+
+                        index_list = index.split('/');
+                        index_list = index_list.filter(function(e){return e});
+
+                        console.log('index_list:');
+                        console.log(index_list);
+
+                        index_count = index_list.length;
+
+
+                        console.log('index_count:');
+                        console.log(index_count);
+
+
+                        if(index_count == 1){
+                            new_code = xml_json[index_list[0]];
+
+                            console.log('new_code:');
+                            console.log(new_code);
+
+                        }else{
+                            for (i=0; i<index_count; i++){
+
+
+                                console.log('index:');
+                                console.log(index_list[i]);
+
+                                new_code = xml_json[index_list[i]];
+                                new_code = get_new_code(xml_json[index_list[i]], index_list, i);
+
+                                console.log('new_code:');
+                                console.log(new_code);
+
+
+                            }
+                        }
+
+                        console.log(typeof  new_code);
+
+                        if(typeof  new_code == 'string'){
+                            $('.code-preview textarea').val(new_code);
+
+                        }else if(typeof  new_code == 'object'){
+
+                            $('.code-preview textarea').val(JSON.stringify(new_code));
+
+                        }
+
+
+
+
+
+
+
+
+                    })
+                })
+
+                function  get_new_code(new_code, index_list, i) {
+                    console.log(new_code);
+                    new_code_str = new_code[index_list[i]];
+
+                    return new_code_str;
+                }
+
+
+            </script>
+            <?php
 
 
 
@@ -225,12 +301,19 @@ function job_bm_metabox_xml_source_content_xml($job_id){
 
 
             ?>
+            <div class="code-preview">
+                <textarea></textarea>
 
+            </div>
 
             <textarea style="width: 100%;"><?php echo '<pre>'.var_export($json_keys, true).'</pre>'; ?></textarea>
 
             <style type="text/css">
-                .tree-view{}
+                .tree-view{
+                    width: 250px;
+                    display: inline-block;
+                    float: left;
+                }
                 .tree-view li{
                     border-left: 1px solid;
                     padding: 5px 3px;
@@ -266,7 +349,7 @@ function job_bm_metabox_xml_source_content_xml($job_id){
                     margin-left: 5px;
                 }
 
-
+                .code-preview{}
 
             </style>
 
@@ -282,9 +365,6 @@ function job_bm_metabox_xml_source_content_xml($job_id){
                             $(this).addClass('active');
                             $(this).parent().children('ul').fadeIn();
                         }
-
-
-                        console.log('Hello');
 
                     })
                 })
@@ -410,8 +490,13 @@ function job_bm_metabox_xml_source_content_fields($job_id){
 
             </ul>
 
+
+
+
             <style type="text/css">
-                .fields-selector{}
+                .fields-selector{
+
+                }
 
                 .fields-selector li{
                     display: block;
@@ -426,6 +511,7 @@ function job_bm_metabox_xml_source_content_fields($job_id){
                 .fields-selector input{
                     padding: 3px 10px;
                 }
+
 
 
             </style>
