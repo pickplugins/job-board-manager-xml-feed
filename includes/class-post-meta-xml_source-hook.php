@@ -212,75 +212,54 @@ function job_bm_metabox_xml_source_content_xml($job_id){
 
 
 
+
+
                 xml_json = <?php echo $xml_json; ?>;
+
+                //console.log(xml_json['results']['result']);
+
 
                 jQuery(document).ready(function($) {
                     $(document).on('click', '.tree-view input', function(){
                         index = $(this).val();
 
-
                         index_list = index.split('/');
                         index_list = index_list.filter(function(e){return e});
 
-                        console.log('index_list:');
-                        console.log(index_list);
+                        i = 0;
+                        get_new_code(xml_json, i, index_list);
 
-                        index_count = index_list.length;
-
-
-                        console.log('index_count:');
-                        console.log(index_count);
-
-
-                        if(index_count == 1){
-                            new_code = xml_json[index_list[0]];
-
-                            console.log('new_code:');
-                            console.log(new_code);
-
-                        }else{
-                            for (i=0; i<index_count; i++){
-
-
-                                console.log('index:');
-                                console.log(index_list[i]);
-
-                                new_code = xml_json[index_list[i]];
-                                new_code = get_new_code(xml_json[index_list[i]], index_list, i);
-
-                                console.log('new_code:');
-                                console.log(new_code);
-
-
-                            }
-                        }
-
-                        console.log(typeof  new_code);
-
-                        if(typeof  new_code == 'string'){
-                            $('.code-preview textarea').val(new_code);
-
-                        }else if(typeof  new_code == 'object'){
-
-                            $('.code-preview textarea').val(JSON.stringify(new_code));
-
-                        }
-
-
-
-
-
-
+                        //console.log( new_code);
 
 
                     })
                 })
 
-                function  get_new_code(new_code, index_list, i) {
-                    console.log(new_code);
-                    new_code_str = new_code[index_list[i]];
+                function  get_new_code(xml_json, i, index_list) {
+                    index_count = index_list.length;
 
-                    return new_code_str;
+                   // while (i <= index_count){
+
+                    if(i < index_count){
+
+                        if(typeof xml_json[index_list[i]] != 'undefined'){
+                            new_code = xml_json[index_list[i]];
+                            get_new_code(xml_json[index_list[i]], i+1, index_list);
+                        }
+
+                    }
+
+                    if(typeof  new_code =='object'){
+                        new_code = JSON.stringify(new_code);
+                    }
+
+                    jQuery('.code-preview textarea').val(new_code);
+
+                    //return new_code;
+                    //}
+
+
+
                 }
 
 
@@ -295,18 +274,21 @@ function job_bm_metabox_xml_source_content_xml($job_id){
 
 
             echo "<ul class='tree-view'>\n";
-            $tree = mygenerateTreeMenu($json_keys, '', 100);
+            $tree = mygenerateTreeMenu($json_keys, '', 500);
             echo $tree;
             echo "</ul>\n";
 
 
             ?>
             <div class="code-preview">
-                <textarea></textarea>
+                <textarea id="code"></textarea>
 
             </div>
 
-            <textarea style="width: 100%;"><?php echo '<pre>'.var_export($json_keys, true).'</pre>'; ?></textarea>
+
+            <div class="clear"></div>
+
+
 
             <style type="text/css">
                 .tree-view{
@@ -355,6 +337,7 @@ function job_bm_metabox_xml_source_content_xml($job_id){
 
             <script>
                 jQuery(document).ready(function($) {
+
                     $(document).on('click', '.tree-view .action-open-close', function(){
 
                         if($(this).hasClass('active')){
