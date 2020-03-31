@@ -6,11 +6,11 @@ if ( ! defined('ABSPATH')) exit;  // if direct access
 add_action('job_bm_metabox_xml_source_content_general','job_bm_metabox_xml_source_content_general');
 
 
-function job_bm_metabox_xml_source_content_general($job_id){
+function job_bm_metabox_xml_source_content_general($post_id){
     $settings_tabs_field = new settings_tabs_field();
 
-    $xml_url = get_post_meta($job_id, 'xml_url', true);
-    $interval = get_post_meta($job_id, 'interval', true);
+    $xml_url = get_post_meta($post_id, 'xml_url', true);
+    $interval = get_post_meta($post_id, 'interval', true);
 
     ?>
     <div class="section">
@@ -49,8 +49,8 @@ function job_bm_metabox_xml_source_content_general($job_id){
         $settings_tabs_field->generate_field($args);
 
 
-        $last_check_date = get_post_meta($job_id, 'last_check_date', true);
-        $next_check_datetime = get_post_meta($job_id, 'next_check_datetime', true);
+        $last_check_date = get_post_meta($post_id, 'last_check_date', true);
+        $next_check_datetime = get_post_meta($post_id, 'next_check_datetime', true);
 
 
         $gmt_offset = get_option('gmt_offset');
@@ -97,7 +97,6 @@ function job_bm_metabox_xml_source_content_general($job_id){
 
 
 }
-add_action('job_bm_metabox_xml_source_content_fields','job_bm_metabox_xml_source_content_xml');
 
 
 
@@ -129,7 +128,7 @@ function get_json_keys($node, $offset=0) {
 function mygenerateTreeMenu($dir_array, $index, $limit = 0){
 
     $key = '';
-    if ($limit > 1000) return '';
+    if ($limit > 5000) return '';
     $tree = '';
 
     if(is_array($dir_array))
@@ -154,7 +153,7 @@ function mygenerateTreeMenu($dir_array, $index, $limit = 0){
 
             $tree .= "<ul>";
 
-            $tree .= mygenerateTreeMenu($value, $key, $limit++);
+            $tree .= mygenerateTreeMenu($value, $index.'/'.$key, $limit++);
             $tree .= "</ul></li>\n";
         }
         else{
@@ -169,12 +168,16 @@ function mygenerateTreeMenu($dir_array, $index, $limit = 0){
 
 
 
+add_action('job_bm_metabox_xml_source_content_fields','job_bm_metabox_xml_source_content_xml');
 
-function job_bm_metabox_xml_source_content_xml($job_id){
+function job_bm_metabox_xml_source_content_xml($post_id){
     $settings_tabs_field = new settings_tabs_field();
 
-    $xml_url = get_post_meta($job_id, 'xml_url', true);
+    $xml_url = get_post_meta($post_id, 'xml_url', true);
+    //$field_index = get_post_meta($post_id, 'field_index', true);
+    $field_index = get_post_meta($post_id, 'field_index', true);
 
+    //var_dump($field_index);
 
 
 
@@ -191,7 +194,7 @@ function job_bm_metabox_xml_source_content_xml($job_id){
 
                 echo '<pre>'.var_export('There is a error.', true).'</pre>';
 
-                return;
+                //return;
             }
 
             $xml_string = file_get_contents($xml_url);
@@ -250,7 +253,27 @@ function job_bm_metabox_xml_source_content_xml($job_id){
                     }
 
                     if(typeof  new_code =='object'){
+
+
+
+                        if(typeof new_code[0] != 'undefined'){
+
+                            keys = Object.keys(new_code[0]);
+                            selector = '';
+
+                            keys.forEach(function (item) {
+                                console.log(item);
+                                selector += '<li>'+item+'</li>';
+                            })
+                            jQuery('.input-selector ul').html(selector);
+
+                        }else{
+                            jQuery('.input-selector ul').html('');
+                        }
+
                         new_code = JSON.stringify(new_code);
+
+
                     }
 
                     jQuery('.code-preview textarea').val(new_code);
@@ -281,7 +304,7 @@ function job_bm_metabox_xml_source_content_xml($job_id){
 
             ?>
             <div class="code-preview">
-                <textarea id="code"></textarea>
+                <textarea style="height: 400px" id="code"></textarea>
 
             </div>
 
@@ -356,150 +379,210 @@ function job_bm_metabox_xml_source_content_xml($job_id){
         </div>
     </div>
 
+
+    <div class="section">
+
+        <div class="json-template">
+            <div class="input-fields">
+
+                <div class="setting-field">
+
+                    <ul class="fields-selector">
+                        <li>
+                            <label>Unique identifier</label>
+                            <input name="field_index[identifier]" value="<?php echo isset($field_index['identifier']) ? $field_index['identifier'] : ''; ?>" placeholder="post_id">
+                        </li>
+
+
+                        <li>
+                            <label>Job title</label>
+                            <input name="field_index[post_title]" value="<?php echo isset($field_index['post_title']) ? $field_index['post_title'] : ''; ?>" placeholder="post_title">
+                        </li>
+                        <li>
+                            <label>Job content</label>
+                            <input name="field_index[post_content]" value="<?php echo isset($field_index['post_content']) ? $field_index['post_content'] : ''; ?>" placeholder="post_content">
+                        </li>
+
+
+
+
+                        <li>
+                            <label>Total vacancies</label>
+                            <input name="field_index[job_bm_total_vacancies]" value="<?php echo isset($field_index['job_bm_total_vacancies']) ? $field_index['job_bm_total_vacancies'] : ''; ?>" placeholder="total_vacancies">
+                        </li>
+                        <li>
+                            <label>Job type</label>
+                            <input name="field_index[job_bm_job_type]" value="<?php echo isset($field_index['job_bm_job_type']) ? $field_index['job_bm_job_type'] : ''; ?>" placeholder="job_type">
+                        </li>
+                        <li>
+                            <label>Job level</label>
+                            <input name="field_index[job_bm_job_level]" value="<?php echo isset($field_index['job_bm_job_level']) ? $field_index['job_bm_job_level'] : ''; ?>" placeholder="job_level">
+                        </li>
+                        <li>
+                            <label>Years of experience</label>
+                            <input name="field_index[job_bm_years_experience]" value="<?php echo isset($field_index['job_bm_years_experience']) ? $field_index['job_bm_years_experience'] : ''; ?>" placeholder="years_experience">
+                        </li>
+
+                        <li>
+                            <label>Salary type</label>
+                            <input name="field_index[job_bm_salary_type]" value="<?php echo isset($field_index['job_bm_salary_type']) ? $field_index['job_bm_salary_type'] : ''; ?>" placeholder="salary_type">
+                        </li>
+                        <li>
+                            <label>Fixed salary</label>
+                            <input name="field_index[job_bm_salary_fixed]" value="<?php echo isset($field_index['job_bm_salary_fixed']) ? $field_index['job_bm_salary_fixed'] : ''; ?>" placeholder="salary_fixed">
+                        </li>
+                        <li>
+                            <label>Minimum salary</label>
+                            <input name="field_index[job_bm_salary_min]" value="<?php echo isset($field_index['job_bm_salary_min']) ? $field_index['job_bm_salary_min'] : ''; ?>" placeholder="salary_min">
+                        </li>
+                        <li>
+                            <label>Maximum salary</label>
+                            <input name="field_index[job_bm_salary_max]" value="<?php echo isset($field_index['job_bm_salary_max']) ? $field_index['job_bm_salary_max'] : ''; ?>" placeholder="salary_max">
+                        </li>
+
+                        <li>
+                            <label>Salary duration</label>
+                            <input name="field_index[job_bm_salary_duration]" value="<?php echo isset($field_index['job_bm_salary_duration']) ? $field_index['job_bm_salary_duration'] : ''; ?>" placeholder="salary_duration">
+                        </li>
+                        <li>
+                            <label>Salary currency</label>
+                            <input name="field_index[job_bm_salary_currency]" value="<?php echo isset($field_index['job_bm_salary_currency']) ? $field_index['job_bm_salary_currency'] : ''; ?>" placeholder="salary_currency">
+                        </li>
+
+                        <li>
+                            <label>Contact email</label>
+                            <input name="field_index[job_bm_contact_email]" value="<?php echo isset($field_index['job_bm_contact_email']) ? $field_index['job_bm_contact_email'] : ''; ?>" placeholder="contact_email">
+                        </li>
+
+
+                        <li>
+                            <label>Company name</label>
+                            <input name="field_index[job_bm_company_name]" value="<?php echo isset($field_index['job_bm_company_name']) ? $field_index['job_bm_company_name'] : ''; ?>" placeholder="company_name">
+                        </li>
+                        <li>
+                            <label>Address</label>
+                            <input name="field_index[job_bm_address]" value="<?php echo isset($field_index['job_bm_address']) ? $field_index['job_bm_address'] : ''; ?>" placeholder="address">
+                        </li>
+
+                        <li>
+                            <label>Company website</label>
+                            <input name="field_index[job_bm_company_website]" value="<?php echo isset($field_index['job_bm_company_website']) ? $field_index['job_bm_company_website'] : ''; ?>" placeholder="company_website">
+                        </li>
+                        <li>
+                            <label>Job link</label>
+                            <input name="field_index[job_bm_job_link]" value="<?php echo isset($field_index['job_bm_job_link']) ? $field_index['job_bm_job_link'] : ''; ?>" placeholder="job_link">
+                        </li>
+                        <li>
+                            <label>Company logo</label>
+                            <input name="field_index[job_bm_company_logo]" value="<?php echo isset($field_index['job_bm_company_logo']) ? $field_index['job_bm_company_logo'] : ''; ?>" placeholder="company_logo">
+                        </li>
+                        <li>
+                            <label>Job status</label>
+                            <input name="field_index[job_bm_job_status]" value="<?php echo isset($field_index['job_bm_job_status']) ? $field_index['job_bm_job_status'] : ''; ?>" placeholder="job_status">
+                        </li>
+
+                        <li>
+                            <label>Expiry date</label>
+                            <input name="field_index[job_bm_expire_date]" value="<?php echo isset($field_index['job_bm_expire_date']) ? $field_index['job_bm_expire_date'] : ''; ?>" placeholder="expire_date">
+                        </li>
+
+
+                    </ul>
+
+
+
+
+                    <style type="text/css">
+                        .fields-selector{
+
+                        }
+
+                        .fields-selector li{
+                            display: block;
+                            /* border-bottom: 1px solid #ddd; */
+                            padding: 10px 0;
+                        }
+
+                        .fields-selector label{
+                            width: 206px;
+                            display: inline-block;
+                        }
+                        .fields-selector input{
+                            padding: 3px 10px;
+                        }
+
+
+
+                    </style>
+                </div>
+
+            </div>
+            <div class="input-selector">
+                <div class="selector-title">Copy element to input fields</div>
+                <ul>
+                    <li>Choose loop element frist</li>
+                </ul>
+            </div>
+
+
+        </div>
+
+        <style type="text/css">
+            .json-template{}
+            .json-template .input-fields{
+                float: left;
+                width: 450px;
+            }
+            .json-template .input-selector{
+                margin-left: 450px;
+                border-left: 1px solid #ddd;
+                padding: 10px;
+            }
+            .json-template .input-selector .selector-title{
+                border-bottom: 1px solid #ddd;
+                padding: 10px;
+                font-size: 16px;
+            }
+
+            .json-template .input-selector ul{
+
+            }
+
+            .json-template .input-selector li{
+                font-size: 14px;
+                border-bottom: 1px solid #ddd;
+                padding: 10px 10px;
+                margin: 1px 0;
+                background: #1b64bf1c;
+            }
+
+
+        </style>
+
+
+
+
+    </div>
+
+
+
+
+
     <?
     }
 
-add_action('job_bm_metabox_xml_source_content_fields','job_bm_metabox_xml_source_content_fields');
 
+add_action('job_bm_metabox_xml_source_content_fields','job_bm_metabox_xml_source_content_xml_selector');
 
+function job_bm_metabox_xml_source_content_xml_selector($post_id){
 
-
-
-
-
-
-function job_bm_metabox_xml_source_content_fields($job_id){
     $settings_tabs_field = new settings_tabs_field();
 
-    $job_bm_total_vacancies = get_post_meta($job_id, 'job_bm_total_vacancies', true);
+
+
 
     ?>
-    <div class="section">
-    <div class="section-title"><?php echo __('XML source info','job-board-manager'); ?></div>
-    <p class="section-description"></p>
 
-        <div class="setting-field">
-
-            <ul class="fields-selector">
-                <li>
-                    <label>Job title</label>
-                    <input name="field_index[post_title]" value="" placeholder="total_vacancies">
-                </li>
-                <li>
-                    <label>Job content</label>
-                    <input name="field_index[post_content]" value="" placeholder="post_content">
-                </li>
-
-                <li>
-                    <label>Total vacancies</label>
-                    <input name="field_index[job_bm_total_vacancies]" value="" placeholder="total_vacancies">
-                </li>
-                <li>
-                    <label>Job type</label>
-                    <input name="field_index[job_bm_job_type]" value="" placeholder="job_type">
-                </li>
-                <li>
-                    <label>Job level</label>
-                    <input name="field_index[job_bm_job_level]" value="" placeholder="job_level">
-                </li>
-                <li>
-                    <label>Years of experience</label>
-                    <input name="field_index[job_bm_years_experience]" value="" placeholder="years_experience">
-                </li>
-
-                <li>
-                    <label>Salary type</label>
-                    <input name="field_index[job_bm_salary_type]" value="" placeholder="salary_type">
-                </li>
-                <li>
-                    <label>Fixed salary</label>
-                    <input name="field_index[job_bm_salary_fixed]" value="" placeholder="salary_fixed">
-                </li>
-                <li>
-                    <label>Minimum salary</label>
-                    <input name="field_index[job_bm_salary_min]" value="" placeholder="salary_min">
-                </li>
-                <li>
-                    <label>Maximum salary</label>
-                    <input name="field_index[job_bm_salary_max]" value="" placeholder="salary_max">
-                </li>
-
-                <li>
-                    <label>Salary duration</label>
-                    <input name="field_index[job_bm_salary_duration]" value="" placeholder="salary_duration">
-                </li>
-                <li>
-                    <label>Salary currency</label>
-                    <input name="field_index[job_bm_salary_currency]" value="" placeholder="salary_currency">
-                </li>
-
-                <li>
-                    <label>Contact email</label>
-                    <input name="field_index[job_bm_contact_email]" value="" placeholder="contact_email">
-                </li>
-
-
-                <li>
-                    <label>Company name</label>
-                    <input name="field_index[job_bm_company_name]" value="" placeholder="company_name">
-                </li>
-                <li>
-                    <label>Address</label>
-                    <input name="field_index[job_bm_address]" value="" placeholder="address">
-                </li>
-
-                <li>
-                    <label>Company website</label>
-                    <input name="field_index[job_bm_company_website]" value="" placeholder="company_website">
-                </li>
-                <li>
-                    <label>Job link</label>
-                    <input name="field_index[job_bm_job_link]" value="" placeholder="job_link">
-                </li>
-                <li>
-                    <label>Company logo</label>
-                    <input name="field_index[job_bm_company_logo]" value="" placeholder="company_logo">
-                </li>
-                <li>
-                    <label>Job status</label>
-                    <input name="field_index[job_bm_job_status]" value="" placeholder="job_status">
-                </li>
-
-                <li>
-                    <label>Expiry date</label>
-                    <input name="field_index[job_bm_expire_date]" value="" placeholder="expire_date">
-                </li>
-
-
-            </ul>
-
-
-
-
-            <style type="text/css">
-                .fields-selector{
-
-                }
-
-                .fields-selector li{
-                    display: block;
-                    /* border-bottom: 1px solid #ddd; */
-                    padding: 10px 0;
-                }
-
-                .fields-selector label{
-                    width: 206px;
-                    display: inline-block;
-                }
-                .fields-selector input{
-                    padding: 3px 10px;
-                }
-
-
-
-            </style>
-        </div>
-    </div>
 
     <?php
 }
@@ -513,23 +596,25 @@ function job_bm_metabox_xml_source_content_fields($job_id){
 
 add_action('job_bm_meta_box_save_xml_source','job_bm_meta_box_save_xml_source');
 
-function job_bm_meta_box_save_xml_source($job_id){
+function job_bm_meta_box_save_xml_source($post_id){
 
     $xml_url = isset($_POST['xml_url']) ? sanitize_text_field($_POST['xml_url']) : '';
-    update_post_meta($job_id, 'xml_url', $xml_url);
+    update_post_meta($post_id, 'xml_url', $xml_url);
 
     $interval = isset($_POST['interval']) ? sanitize_text_field($_POST['interval']) : '';
-    update_post_meta($job_id, 'interval', $interval);
+    update_post_meta($post_id, 'interval', $interval);
 
     $last_check_date = isset($_POST['last_check_date']) ? sanitize_text_field($_POST['last_check_date']) : '';
-    update_post_meta($job_id, 'last_check_date', $last_check_date);
+    update_post_meta($post_id, 'last_check_date', $last_check_date);
 
     $next_check_datetime = isset($_POST['next_check_datetime']) ? sanitize_text_field($_POST['next_check_datetime']) : '';
-    update_post_meta($job_id, 'next_check_datetime', $next_check_datetime);
+    update_post_meta($post_id, 'next_check_datetime', $next_check_datetime);
 
+    $field_index = isset($_POST['field_index']) ? stripslashes_deep($_POST['field_index']) : '';
+    update_post_meta($post_id, 'field_index', $field_index);
 
     //$job_bm_application_methods = isset($_POST['job_bm_application_methods']) ? stripslashes_deep($_POST['job_bm_application_methods']) : '';
-    //update_post_meta($job_id, 'job_bm_application_methods', $job_bm_application_methods);
+    //update_post_meta($post_id, 'job_bm_application_methods', $job_bm_application_methods);
 
 
 }
