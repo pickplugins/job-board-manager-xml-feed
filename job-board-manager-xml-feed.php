@@ -29,6 +29,7 @@ class JobBoardManagerXMLFeed{
         require_once( job_bm_xml_feed_plugin_dir . 'includes/class-post-meta-xml_source.php');
         require_once( job_bm_xml_feed_plugin_dir . 'includes/class-post-meta-xml_source-hook.php');
         require_once( job_bm_xml_feed_plugin_dir . 'includes/functions.php');
+        require_once( job_bm_xml_feed_plugin_dir . 'includes/functions-crons.php');
 
         // Function's
 	    //require_once( job_bm_xml_feed_plugin_dir . 'includes/functions-settings.php');
@@ -39,13 +40,18 @@ class JobBoardManagerXMLFeed{
         register_activation_hook( __FILE__, array( $this, '_activation' ) );
         register_deactivation_hook(__FILE__, array( $this, '_deactivation' ));
 
-        //add_filter( 'cron_schedules', array( $this, 'cron_recurrence_interval' ) );
+        add_filter( 'cron_schedules', array( $this, 'cron_recurrence_interval' ) );
 	}
 
 
 
     function cron_recurrence_interval( $schedules ){
 
+
+        $schedules['15minute'] = array(
+            'interval'  => 900,
+            'display'   => __( 'Every 15 Minutes', 'textdomain' )
+        );
 
         $schedules['30minutes'] = array(
             'interval'  => 1800,
@@ -98,6 +104,9 @@ class JobBoardManagerXMLFeed{
     public function _activation(){
 
 
+        if (! wp_next_scheduled ( 'job_bm_xml_feed_scraps_source' )){
+            wp_schedule_event(time(), '15minute', 'job_bm_xml_feed_scraps_source');
+        }
 
 
 

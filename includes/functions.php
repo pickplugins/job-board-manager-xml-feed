@@ -20,78 +20,55 @@ function job_bm_job_content_import_link($content){
         if (  is_wp_error( $response ) ){
 
             echo '<pre>'.var_export('There is a error.', true).'</pre>';
+            //return;
+        }else{
 
-            return;
-        }
-
-        $xml_str = file_get_contents($xml_url);
-
-        ?>
-        <textarea style="width: 100%"><?php echo var_export($xml_str, true); ?></textarea>
-
-        <?php
+            $tree_path = get_post_meta($post_id, 'tree_path', true);
+            $field_index = get_post_meta($post_id, 'field_index', true);
+            $class_job_bm_import = new class_job_bm_import();
 
 
-        $re = '/<\w*:\w*>/';
+            $response_data = wp_remote_retrieve_body($response);
+            $xml = simplexml_load_string($response_data);
+            $xml_json = json_encode($xml);
+            $xml_arr = json_decode($xml_json, true);
 
-        preg_match_all($re, $xml_str, $matches);
+            $index_list = explode('/', $tree_path);
+            $index_list = array_filter($index_list);
+            $index_list_count = count($index_list);
 
-        $it = new RecursiveIteratorIterator(new RecursiveArrayIterator($matches));
+            $i = 0;
+            foreach ($index_list as $index){
 
-        if(!empty($it))
-        foreach($it as $v) {
+                if($i <=$index_list_count){
+                    $xml_arr = $xml_arr[$index];
+                }
 
-            $v_new = str_replace('<','', $v);
-            $v_naked = str_replace('>','', $v_new);
-            $v_new = str_replace(':','_', $v_naked);
-
-            $tag_list[] = $v_naked;
-            $tag_list_replace[] = $v_new;
-        }
-
-
-        if(!empty($tag_list) || !empty($tag_list_replace)){
-            $string = str_replace(
-                $tag_list,
-                $tag_list_replace,
-                $xml_str
-            );
-
-            ?>
-            <!--        <textarea style="width: 100%">--><?php //echo var_export($tag_list, true); ?><!--</textarea>-->
-            <!--        <textarea style="width: 100%">--><?php //echo var_export($tag_list_replace, true); ?><!--</textarea>-->
-            <!--        <textarea style="width: 100%">--><?php //echo var_export($string, true); ?><!--</textarea>-->
-            <!--        <br>-->
-            <?php
+                $i++;
+            }
 
 
-            $xml = new SimpleXMLElement($string);
 
-            //echo '<pre>'.var_export($xml, true).'</pre>';
+            if(!empty($xml_arr) && is_array($xml_arr))
+                foreach ($xml_arr as $item_index => $item){
 
+                    $job_data = create_job_item($item_index, $item, $post_id);
+                    $class_job_bm_import->insert_job_data($job_data);
 
-            ob_start();
-            displayNode($xml, 0);
-            $tags = ob_get_clean();
-            //echo '<pre>'.var_export($tags, true).'</pre>';
+                    ?>
+                    <pre><?php echo var_export($job_data, true); ?></pre>
+
+                    <?php
+                }
 
             ?>
-            <!--                <textarea style="width: 100%">--><?php //echo var_export($tags, true); ?><!--</textarea>-->
-            <!--        <textarea style="width: 100%">--><?php //echo var_export($tag_list_replace, true); ?><!--</textarea>-->
-            <!--        <textarea style="width: 100%">--><?php //echo var_export($string, true); ?><!--</textarea>-->
-            <!--        <br>-->
+            <pre><?php //echo var_export($xml_arr, true); ?></pre>
+            <textarea style="width: 100%"><?php //echo var_export($xml_arr['results'], true); ?></textarea>
+
             <?php
-
-
-            $tags = explode(',', $tags);
-            $tags = array_filter($tags);
-
-            $tags_count = array_count_values($tags);
-
-
-            echo '<pre>'.var_export($tags_count, true).'</pre>';
-
         }
+
+
 
 
 
@@ -101,6 +78,42 @@ function job_bm_job_content_import_link($content){
 
     return $content;
 }
+
+
+
+function create_job_item($item_index, $item, $post_id){
+
+    $field_index = get_post_meta($post_id, 'field_index', true);
+
+    $job_data = array();
+
+    foreach ($field_index as $field_key=>$index){
+
+        if(!empty($index)){
+
+            if($field_key == 'post_title' || $field_key == 'post_content'){
+                $job_data[$field_key] = isset($item[$index]) ? $item[$index] : '';
+            }else{
+                $job_data['meta_fields'][$field_key] = isset($item[$index]) ? $item[$index] : '';
+            }
+
+
+
+        }
+
+    }
+
+
+    return $job_data;
+}
+
+
+
+
+
+
+
+
 
 function displayNode($node, $offset) {
 

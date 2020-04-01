@@ -42,7 +42,7 @@ function job_bm_metabox_xml_source_content_general($post_id){
             'type'		=> 'select',
             'value'		=> $interval,
             'default'		=> '6 hour',
-            'args'		=> array('daily'=>'Daily', 'weekly'=>'Weekly','30minutes'=>'30 minutes','45minutes'=>'45 minutes','1hour'=>'1 hour','6hours'=>'6 hours', '12hours'=>'12 hours'   ),
+            'args'		=> array('1 day'=>'Daily', '7 days'=>'Weekly','15 minute'=>'15 minute','30 minute'=>'30 minute','45 minute'=>'45 minute','1 hour'=>'1 hour','3 hours'=>'3 hours','4 hours'=>'4 hours','5 hours'=>'5 hours','6 hours'=>'6 hours','10 hours'=>'10 hours', '12 hours'=>'12 hours'   ),
 
         );
 
@@ -127,15 +127,24 @@ function get_json_keys($node, $offset=0) {
 
 function mygenerateTreeMenu($dir_array, $index, $limit = 0){
 
+    $post_id = get_the_id();
+
+    $tree_path = get_post_meta($post_id, 'tree_path', true);
+
+
     $key = '';
     if ($limit > 5000) return '';
     $tree = '';
 
     if(is_array($dir_array))
     foreach ($dir_array as $key => $value){
+
         if (!is_int($key)){
+
+            $checked = ($tree_path==$index.'/'.$key) ? 'checked' : '';
+
             $tree .= "<li>";
-            $tree .= "<input type='radio' value='$index/$key' name='tree-path'>";
+            $tree .= "<input type='radio' $checked value='$index/$key' name='tree_path'>";
 
             if(is_array($value)){
                 $tree .= "<span class='action-open-close'>";
@@ -176,6 +185,7 @@ function job_bm_metabox_xml_source_content_xml($post_id){
     $xml_url = get_post_meta($post_id, 'xml_url', true);
     //$field_index = get_post_meta($post_id, 'field_index', true);
     $field_index = get_post_meta($post_id, 'field_index', true);
+    $tree_path = get_post_meta($post_id, 'tree_path', true);
 
     //var_dump($field_index);
 
@@ -192,7 +202,7 @@ function job_bm_metabox_xml_source_content_xml($post_id){
             $response  = wp_remote_get($xml_url, array('timeout'     => 2));
             if (  is_wp_error( $response ) ){
 
-                echo '<pre>'.var_export('There is a error.', true).'</pre>';
+                //echo '<pre>'.var_export('There is a error.', true).'</pre>';
 
                 //return;
             }
@@ -350,7 +360,7 @@ function job_bm_metabox_xml_source_content_xml($post_id){
                 .tree-view a{
                     margin-left: 5px;
                 }
-                .tree-view input[name='tree-path']{
+                .tree-view input[name='tree_path']{
                     margin-left: 5px;
                 }
 
@@ -388,11 +398,6 @@ function job_bm_metabox_xml_source_content_xml($post_id){
                 <div class="setting-field">
 
                     <ul class="fields-selector">
-                        <li>
-                            <label>Unique identifier</label>
-                            <input name="field_index[identifier]" value="<?php echo isset($field_index['identifier']) ? $field_index['identifier'] : ''; ?>" placeholder="post_id">
-                        </li>
-
 
                         <li>
                             <label>Job title</label>
@@ -459,6 +464,11 @@ function job_bm_metabox_xml_source_content_xml($post_id){
                             <label>Company name</label>
                             <input name="field_index[job_bm_company_name]" value="<?php echo isset($field_index['job_bm_company_name']) ? $field_index['job_bm_company_name'] : ''; ?>" placeholder="company_name">
                         </li>
+
+                        <li>
+                            <label>Location</label>
+                            <input name="field_index[job_bm_location]" value="<?php echo isset($field_index['job_bm_location']) ? $field_index['job_bm_location'] : ''; ?>" placeholder="location">
+                        </li>
                         <li>
                             <label>Address</label>
                             <input name="field_index[job_bm_address]" value="<?php echo isset($field_index['job_bm_address']) ? $field_index['job_bm_address'] : ''; ?>" placeholder="address">
@@ -486,6 +496,18 @@ function job_bm_metabox_xml_source_content_xml($post_id){
                             <input name="field_index[job_bm_expire_date]" value="<?php echo isset($field_index['job_bm_expire_date']) ? $field_index['job_bm_expire_date'] : ''; ?>" placeholder="expire_date">
                         </li>
 
+                        <li>
+                            <label>is imported</label>
+                            <input name="field_index[job_bm_is_imported]" value="<?php echo isset($field_index['job_bm_is_imported']) ? $field_index['job_bm_is_imported'] : 'yes'; ?>" placeholder="yes">
+                        </li>
+                        <li>
+                            <label>Source jobid</label>
+                            <input name="field_index[job_bm_import_source_jobid]" value="<?php echo isset($field_index['job_bm_import_source_jobid']) ? $field_index['job_bm_import_source_jobid'] : ''; ?>" placeholder="">
+                        </li>
+                        <li>
+                            <label>Import source</label>
+                            <input name="field_index[job_bm_import_source]" value="<?php echo isset($field_index['job_bm_import_source']) ? $field_index['job_bm_import_source'] : ''; ?>" placeholder="">
+                        </li>
 
                     </ul>
 
@@ -612,6 +634,9 @@ function job_bm_meta_box_save_xml_source($post_id){
 
     $field_index = isset($_POST['field_index']) ? stripslashes_deep($_POST['field_index']) : '';
     update_post_meta($post_id, 'field_index', $field_index);
+
+    $tree_path = isset($_POST['tree_path']) ? sanitize_text_field($_POST['tree_path']) : '';
+    update_post_meta($post_id, 'tree_path', $tree_path);
 
     //$job_bm_application_methods = isset($_POST['job_bm_application_methods']) ? stripslashes_deep($_POST['job_bm_application_methods']) : '';
     //update_post_meta($post_id, 'job_bm_application_methods', $job_bm_application_methods);
