@@ -10,13 +10,13 @@ function job_bm_job_content_import_link($content){
     if(is_singular('xml_source')) {
 
         $post_id = get_the_ID();
-
         $xml_url = get_post_meta($post_id, 'xml_url', true);
-        $interval = get_post_meta($post_id, 'interval', true);
-        $last_check_date = get_post_meta($post_id, 'last_check_date', true);
-        $next_check_datetime = get_post_meta($post_id, 'next_check_datetime', true);
+
+        job_bm_xml_feed_scraps_source_loop($post_id);
+
 
         $response  = wp_remote_get($xml_url, array('timeout'     => 2));
+
         if (  is_wp_error( $response ) ){
 
             echo '<pre>'.var_export('There is a error.', true).'</pre>';

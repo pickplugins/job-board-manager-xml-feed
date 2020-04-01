@@ -3,6 +3,47 @@ if ( ! defined('ABSPATH')) exit;  // if direct access
 
 
 
+function xml_source_add_shortcode_column( $columns ) {
+    return array_merge( $columns,
+        array(
+            'interval' => __( 'Interval', 'xml_source' ),
+            'last_check' => __( 'Last check', 'xml_source' ),
+            'next_check' => __( 'Next check', 'xml_source' ),
+
+        )
+
+    );
+}
+add_filter( 'manage_xml_source_posts_columns' , 'xml_source_add_shortcode_column' );
+
+
+function xml_source_posts_shortcode_display( $column, $post_id ) {
+
+
+    if ($column == 'next_check'){
+
+        $next_check_datetime = get_post_meta($post_id, 'next_check_datetime', true);
+        echo $next_check_datetime;
+
+    }elseif ($column == 'last_check'){
+
+        $last_check_date = get_post_meta($post_id, 'last_check_date', true);
+        echo $last_check_date;
+
+    }elseif ($column == 'interval'){
+
+        $interval = get_post_meta($post_id, 'interval', true);
+        echo $interval;
+
+    }
+
+}
+
+add_action( 'manage_xml_source_posts_custom_column' , 'xml_source_posts_shortcode_display', 10, 2 );
+
+
+
+
 add_action('job_bm_metabox_xml_source_content_general','job_bm_metabox_xml_source_content_general');
 
 
@@ -133,7 +174,7 @@ function mygenerateTreeMenu($dir_array, $index, $limit = 0){
 
 
     $key = '';
-    if ($limit > 5000) return '';
+    if ($limit > 1000) return '';
     $tree = '';
 
     if(is_array($dir_array))
@@ -153,15 +194,14 @@ function mygenerateTreeMenu($dir_array, $index, $limit = 0){
                 $tree .= "</span>";
             }
 
-
             $tree .= "<a>$key</a>";
+            //$tree .= "<i>$limit</i>";
+
             if(is_array($value)){
                 $tree .= '('.count($value).')';
             }
 
-
             $tree .= "<ul>";
-
             $tree .= mygenerateTreeMenu($value, $index.'/'.$key, $limit++);
             $tree .= "</ul></li>\n";
         }
@@ -220,86 +260,9 @@ function job_bm_metabox_xml_source_content_xml($post_id){
 
             $keys = array_keys(json_decode($xml_json, true));
 
-            ?>
-            <script>
 
-
-
-
-
-                xml_json = <?php echo $xml_json; ?>;
-
-                //console.log(xml_json['results']['result']);
-
-
-                jQuery(document).ready(function($) {
-                    $(document).on('click', '.tree-view input', function(){
-                        index = $(this).val();
-
-                        index_list = index.split('/');
-                        index_list = index_list.filter(function(e){return e});
-
-                        i = 0;
-                        get_new_code(xml_json, i, index_list);
-
-                        //console.log( new_code);
-
-
-                    })
-                })
-
-                function  get_new_code(xml_json, i, index_list) {
-                    index_count = index_list.length;
-
-                   // while (i <= index_count){
-
-                    if(i < index_count){
-
-                        if(typeof xml_json[index_list[i]] != 'undefined'){
-                            new_code = xml_json[index_list[i]];
-                            get_new_code(xml_json[index_list[i]], i+1, index_list);
-                        }
-
-                    }
-
-                    if(typeof  new_code =='object'){
-
-
-
-                        if(typeof new_code[0] != 'undefined'){
-
-                            keys = Object.keys(new_code[0]);
-                            selector = '';
-
-                            keys.forEach(function (item) {
-                                console.log(item);
-                                selector += '<li>'+item+'</li>';
-                            })
-                            jQuery('.input-selector ul').html(selector);
-
-                        }else{
-                            jQuery('.input-selector ul').html('');
-                        }
-
-                        new_code = JSON.stringify(new_code);
-
-
-                    }
-
-                    jQuery('.code-preview textarea').val(new_code);
-
-                    //return new_code;
-                    //}
-
-
-
-                }
-
-
-            </script>
-            <?php
-
-
+            $settings = wp_enqueue_code_editor( array( 'type' => 'application/json','matchBrackets' => true, 'autoCloseBrackets' => true, 'lineWrapping' => true,'continueComments' => 'Enter', ) );
+            $code_editor = wp_json_encode( $settings );
 
             $json_keys = get_json_keys($xml_arr, 0);
 
@@ -307,21 +270,18 @@ function job_bm_metabox_xml_source_content_xml($post_id){
 
 
             echo "<ul class='tree-view'>\n";
-            $tree = mygenerateTreeMenu($json_keys, '', 500);
+            $tree = mygenerateTreeMenu($json_keys, '', 0);
             echo $tree;
             echo "</ul>\n";
 
 
             ?>
             <div class="code-preview">
-                <textarea style="height: 400px" id="code"></textarea>
+                <textarea  style="height: 400px" id="code"><?php echo $xml_json; ?></textarea>
 
             </div>
 
-
             <div class="clear"></div>
-
-
 
             <style type="text/css">
                 .tree-view{
@@ -386,6 +346,93 @@ function job_bm_metabox_xml_source_content_xml($post_id){
                 })
             </script>
 
+            <script>
+
+
+
+
+
+                xml_json = <?php echo $xml_json; ?>;
+
+                //console.log(xml_json['results']['result']);
+
+
+                jQuery(document).ready(function($) {
+
+                    editor = wp.codeEditor.initialize(jQuery('#code'), <?php echo $code_editor; ?>);
+
+
+                    //console.log( CodeMirror);
+                    //console.log( wp.codeEditor);
+
+
+                    $(document).on('click', '.tree-view input', function(){
+                        index = $(this).val();
+
+                        index_list = index.split('/');
+                        index_list = index_list.filter(function(e){return e});
+
+                        i = 0;
+                        get_new_code(xml_json, i, index_list);
+
+                        //console.log( new_code);
+
+
+                    })
+                })
+
+                function  get_new_code(xml_json, i, index_list) {
+                    index_count = index_list.length;
+
+                    // while (i <= index_count){
+
+                    if(i < index_count){
+
+                        if(typeof xml_json[index_list[i]] != 'undefined'){
+                            new_code = xml_json[index_list[i]];
+                            get_new_code(xml_json[index_list[i]], i+1, index_list);
+                        }
+
+                    }
+
+                    if(typeof  new_code =='object'){
+
+
+
+                        if(typeof new_code[0] != 'undefined'){
+
+                            keys = Object.keys(new_code[0]);
+                            selector = '';
+
+                            keys.forEach(function (item) {
+                                console.log(item);
+                                selector += '<li>'+item+'</li>';
+                            })
+                            jQuery('.input-selector ul').html(selector);
+
+                        }else{
+                            jQuery('.input-selector ul').html('');
+                        }
+
+                        new_code = JSON.stringify(new_code);
+
+
+                    }
+
+                    jQuery('.code-preview textarea').val(new_code);
+
+                    //editor.setValue(new_code);
+
+                    //return new_code;
+                    //}
+
+
+
+                }
+
+
+            </script>
+
         </div>
     </div>
 
@@ -418,10 +465,13 @@ function job_bm_metabox_xml_source_content_xml($post_id){
                         <li>
                             <label>Job type</label>
                             <input name="field_index[job_bm_job_type]" value="<?php echo isset($field_index['job_bm_job_type']) ? $field_index['job_bm_job_type'] : ''; ?>" placeholder="job_type">
+                            <p class="description">Default values: full-time, freelance, internship, part-time, temporary.</p>
                         </li>
                         <li>
                             <label>Job level</label>
                             <input name="field_index[job_bm_job_level]" value="<?php echo isset($field_index['job_bm_job_level']) ? $field_index['job_bm_job_level'] : ''; ?>" placeholder="job_level">
+                            <p class="description">Default values: entry_level, mid_level, top_level.</p>
+
                         </li>
                         <li>
                             <label>Years of experience</label>
@@ -431,6 +481,8 @@ function job_bm_metabox_xml_source_content_xml($post_id){
                         <li>
                             <label>Salary type</label>
                             <input name="field_index[job_bm_salary_type]" value="<?php echo isset($field_index['job_bm_salary_type']) ? $field_index['job_bm_salary_type'] : ''; ?>" placeholder="salary_type">
+                            <p class="description">Default values: negotiable, fixed, min-max.</p>
+
                         </li>
                         <li>
                             <label>Fixed salary</label>
@@ -448,6 +500,8 @@ function job_bm_metabox_xml_source_content_xml($post_id){
                         <li>
                             <label>Salary duration</label>
                             <input name="field_index[job_bm_salary_duration]" value="<?php echo isset($field_index['job_bm_salary_duration']) ? $field_index['job_bm_salary_duration'] : ''; ?>" placeholder="salary_duration">
+                            <p class="description">Default values: hour, day, week, month, year</p>
+
                         </li>
                         <li>
                             <label>Salary currency</label>
@@ -497,7 +551,7 @@ function job_bm_metabox_xml_source_content_xml($post_id){
                         </li>
 
                         <li>
-                            <label>is imported</label>
+                            <label>Is imported</label>
                             <input name="field_index[job_bm_is_imported]" value="<?php echo isset($field_index['job_bm_is_imported']) ? $field_index['job_bm_is_imported'] : 'yes'; ?>" placeholder="yes">
                         </li>
                         <li>

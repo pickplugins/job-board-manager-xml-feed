@@ -30,6 +30,7 @@ class JobBoardManagerXMLFeed{
         require_once( job_bm_xml_feed_plugin_dir . 'includes/class-post-meta-xml_source-hook.php');
         require_once( job_bm_xml_feed_plugin_dir . 'includes/functions.php');
         require_once( job_bm_xml_feed_plugin_dir . 'includes/functions-crons.php');
+        require_once( job_bm_xml_feed_plugin_dir . 'includes/functions-settings.php');
 
         // Function's
 	    //require_once( job_bm_xml_feed_plugin_dir . 'includes/functions-settings.php');

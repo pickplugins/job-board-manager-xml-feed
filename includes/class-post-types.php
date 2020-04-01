@@ -50,7 +50,7 @@ class class_job_bm_xml_feed_post_types{
 				'hierarchical' 			=> false,
 				'rewrite' 				=> true,
 				'query_var' 			=> true,
-				'supports' 				=> array('title','editor','custom-fields','author','excerpt'),
+				'supports' 				=> array('title','custom-fields','author'),
 				'show_in_nav_menus' 	=> false,
                 'show_in_menu' 	=> 'edit.php?post_type=job',
 				'menu_icon' => 'dashicons-megaphone',
