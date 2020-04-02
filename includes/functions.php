@@ -3,6 +3,57 @@
 
 if ( ! defined('ABSPATH')) exit;  // if direct access 
 
+
+
+function job_add_xml_source_column( $columns ) {
+    return array_merge( $columns,
+        array(
+            'xml_source' => __( 'XML source', 'xml_source' ),
+
+        )
+
+    );
+}
+add_filter( 'manage_job_posts_columns' , 'job_add_xml_source_column' );
+
+
+function job_posts_shortcode_display( $column, $post_id ) {
+
+
+    if ($column == 'xml_source'){
+
+        $xml_source_id = get_post_meta($post_id, 'xml_source_id', true);
+
+        if(!empty($xml_source_id)){
+            ?>
+            <a href="<?php echo get_edit_post_link($xml_source_id); ?>"><?php echo get_the_title($xml_source_id); ?></a>
+            <?php
+        }
+
+
+
+    }
+
+}
+
+add_action( 'manage_job_posts_custom_column' , 'job_posts_shortcode_display', 10, 2 );
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 add_filter('the_content', 'job_bm_job_content_import_link', 99);
 
 function job_bm_job_content_import_link($content){
@@ -103,6 +154,7 @@ function create_job_item($item_index, $item, $post_id){
 
     }
 
+    $job_data['meta_fields']['xml_source_id'] = $post_id;
 
     return $job_data;
 }

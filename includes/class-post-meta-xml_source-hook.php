@@ -24,16 +24,32 @@ function xml_source_posts_shortcode_display( $column, $post_id ) {
 
         $next_check_datetime = get_post_meta($post_id, 'next_check_datetime', true);
         echo $next_check_datetime;
+        echo '<br>';
+        if( strtotime($next_check_datetime) >current_time('timestamp') ){
+            echo '<i class="fas fa-stopwatch"></i> ';
+            echo 'within '.esc_html(human_time_diff(current_time('timestamp'), strtotime($next_check_datetime))) ;
+        }else{
+            echo '<i class="far fa-calendar-check"></i> ';
+
+            echo 'Scheduled';
+
+        }
+
+
 
     }elseif ($column == 'last_check'){
 
         $last_check_date = get_post_meta($post_id, 'last_check_date', true);
         echo $last_check_date;
+        echo '<br>';
+        echo '<i class="far fa-clock"></i> ';
+        echo esc_html(human_time_diff(strtotime($last_check_date), current_time('timestamp'))) . ' ago';
 
     }elseif ($column == 'interval'){
 
         $interval = get_post_meta($post_id, 'interval', true);
         echo $interval;
+
 
     }
 
@@ -240,198 +256,193 @@ function job_bm_metabox_xml_source_content_xml($post_id){
             <?php
 
             $response  = wp_remote_get($xml_url, array('timeout'     => 2));
-            if (  is_wp_error( $response ) ){
+            if (  !is_wp_error( $response ) ){
+                $response_data = wp_remote_retrieve_body($response);
+                $xml = simplexml_load_string($response_data);
+                $xml_json = json_encode($xml);
+                $xml_arr = json_decode($xml_json, true);
 
-                //echo '<pre>'.var_export('There is a error.', true).'</pre>';
+                $keys = array_keys(json_decode($xml_json, true));
 
-                //return;
+
+                $code_editor_settings = wp_enqueue_code_editor( array( 'type' => 'application/ld+json', ) );
+                $code_editor = wp_json_encode( $code_editor_settings );
+
+                $json_keys = get_json_keys($xml_arr, 0);
+
+
+                echo "<ul class='tree-view'>\n";
+                $tree = mygenerateTreeMenu($json_keys, '', 0);
+                echo $tree;
+                echo "</ul>\n";
+
+                ?>
+                <div class="code-preview">
+                    <textarea  style="height: 400px; width: 100%" id="code"><?php echo esc_attr($xml_json); ?></textarea>
+
+                </div>
+
+                <div class="clear"></div>
+
+                <style type="text/css">
+                    .tree-view{
+                        width: 250px;
+                        display: inline-block;
+                        float: left;
+                    }
+                    .tree-view li{
+                        border-left: 1px solid;
+                        padding: 5px 3px;
+                        margin: 0 0 2px 10px;
+                    }
+                    .tree-view li ul{
+                        display: none;
+                    }
+
+                    .tree-view .action-open-close{
+                        cursor: pointer;
+                    }
+
+
+                    .tree-view .expand{
+
+                    }
+                    .tree-view .action-open-close.active .expand{
+                        display: none;
+                    }
+                    .tree-view .action-open-close.active .collapse{
+                        display: inline-block;
+                    }
+
+                    .tree-view .collapse{
+                        cursor: pointer;
+                        display: none;
+                    }
+                    .tree-view a{
+                        margin-left: 5px;
+                    }
+                    .tree-view input[name='tree_path']{
+                        margin-left: 5px;
+                    }
+
+                    .code-preview{
+                        margin-left: 255px;
+                    }
+
+                </style>
+
+                <script>
+                    jQuery(document).ready(function($) {
+
+                        $(document).on('click', '.tree-view .action-open-close', function(){
+
+                            if($(this).hasClass('active')){
+                                $(this).removeClass('active');
+                                $(this).parent().children('ul').fadeOut();
+
+                            }else{
+                                $(this).addClass('active');
+                                $(this).parent().children('ul').fadeIn();
+                            }
+
+                        })
+                    })
+
+                    xml_json = <?php echo $xml_json; ?>;
+
+                    //console.log(xml_json['results']['result']);
+
+
+                    jQuery(document).ready(function($) {
+
+                        //code_editor = wp.codeEditor.initialize(jQuery('#code'), <?php echo $code_editor; ?>);
+
+
+                        //console.log( wp.codeEditor);
+
+
+                        $(document).on('click', '.tree-view input', function(){
+                            index = $(this).val();
+
+                            index_list = index.split('/');
+                            index_list = index_list.filter(function(e){return e});
+
+                            i = 0;
+                            get_new_code(xml_json, i, index_list);
+
+                            //console.log( new_code);
+
+
+                        })
+                    })
+
+                    function  get_new_code(xml_json, i, index_list) {
+                        index_count = index_list.length;
+
+                        // while (i <= index_count){
+
+                        if(i < index_count){
+
+                            if(typeof xml_json[index_list[i]] != 'undefined'){
+                                new_code = xml_json[index_list[i]];
+                                get_new_code(xml_json[index_list[i]], i+1, index_list);
+                            }
+
+                        }
+
+                        if(typeof  new_code =='object'){
+
+
+
+                            if(typeof new_code[0] != 'undefined'){
+
+                                keys = Object.keys(new_code[0]);
+                                selector = '';
+
+                                keys.forEach(function (item) {
+                                    console.log(item);
+                                    selector += '<li>'+item+'</li>';
+                                })
+                                jQuery('.input-selector ul').html(selector);
+
+                            }else{
+                                jQuery('.input-selector ul').html('');
+                            }
+
+                            new_code = JSON.stringify(new_code);
+
+
+                        }
+
+                        jQuery('.code-preview textarea').val(new_code);
+
+                        //wp.codeEditor.initialize(jQuery('#code'), <?php //echo $code_editor; ?>).setValue(new_code);
+
+                        //return new_code;
+                        //}
+
+
+
+                    }
+
+
+                </script>
+                <?php
+
+
+            }else{
+                echo 'Can not access to url. please try refresh or save again to load.';
             }
 
-            $xml_string = file_get_contents($xml_url);
-
-            $xml = simplexml_load_string($xml_string);
-
-//            ?>
-<!--            <textarea style="width: 100%;">--><?php //echo '<pre>'.var_export($xml, true).'</pre>'; ?><!--</textarea>-->
-<!--            --><?php
-
-            $xml_json = json_encode($xml);
-            $xml_arr = json_decode($xml_json, true);
-
-            $keys = array_keys(json_decode($xml_json, true));
-
-
-            $settings = wp_enqueue_code_editor( array( 'type' => 'application/json','matchBrackets' => true, 'autoCloseBrackets' => true, 'lineWrapping' => true,'continueComments' => 'Enter', ) );
-            $code_editor = wp_json_encode( $settings );
-
-            $json_keys = get_json_keys($xml_arr, 0);
 
 
 
 
-            echo "<ul class='tree-view'>\n";
-            $tree = mygenerateTreeMenu($json_keys, '', 0);
-            echo $tree;
-            echo "</ul>\n";
+
 
 
             ?>
-            <div class="code-preview">
-                <textarea  style="height: 400px" id="code"><?php echo $xml_json; ?></textarea>
 
-            </div>
-
-            <div class="clear"></div>
-
-            <style type="text/css">
-                .tree-view{
-                    width: 250px;
-                    display: inline-block;
-                    float: left;
-                }
-                .tree-view li{
-                    border-left: 1px solid;
-                    padding: 5px 3px;
-                    margin: 0 0 2px 10px;
-                }
-                .tree-view li ul{
-                    display: none;
-                }
-
-                .tree-view .action-open-close{
-                    cursor: pointer;
-                }
-
-
-                .tree-view .expand{
-
-                }
-                .tree-view .action-open-close.active .expand{
-                    display: none;
-                }
-                .tree-view .action-open-close.active .collapse{
-                    display: inline-block;
-                }
-
-                .tree-view .collapse{
-                    cursor: pointer;
-                    display: none;
-                }
-                .tree-view a{
-                    margin-left: 5px;
-                }
-                .tree-view input[name='tree_path']{
-                    margin-left: 5px;
-                }
-
-                .code-preview{}
-
-            </style>
-
-            <script>
-                jQuery(document).ready(function($) {
-
-                    $(document).on('click', '.tree-view .action-open-close', function(){
-
-                        if($(this).hasClass('active')){
-                            $(this).removeClass('active');
-                            $(this).parent().children('ul').fadeOut();
-
-                        }else{
-                            $(this).addClass('active');
-                            $(this).parent().children('ul').fadeIn();
-                        }
-
-                    })
-                })
-            </script>
-
-            <script>
-
-
-
-
-
-                xml_json = <?php echo $xml_json; ?>;
-
-                //console.log(xml_json['results']['result']);
-
-
-                jQuery(document).ready(function($) {
-
-                    editor = wp.codeEditor.initialize(jQuery('#code'), <?php echo $code_editor; ?>);
-
-
-                    //console.log( CodeMirror);
-                    //console.log( wp.codeEditor);
-
-
-                    $(document).on('click', '.tree-view input', function(){
-                        index = $(this).val();
-
-                        index_list = index.split('/');
-                        index_list = index_list.filter(function(e){return e});
-
-                        i = 0;
-                        get_new_code(xml_json, i, index_list);
-
-                        //console.log( new_code);
-
-
-                    })
-                })
-
-                function  get_new_code(xml_json, i, index_list) {
-                    index_count = index_list.length;
-
-                    // while (i <= index_count){
-
-                    if(i < index_count){
-
-                        if(typeof xml_json[index_list[i]] != 'undefined'){
-                            new_code = xml_json[index_list[i]];
-                            get_new_code(xml_json[index_list[i]], i+1, index_list);
-                        }
-
-                    }
-
-                    if(typeof  new_code =='object'){
-
-
-
-                        if(typeof new_code[0] != 'undefined'){
-
-                            keys = Object.keys(new_code[0]);
-                            selector = '';
-
-                            keys.forEach(function (item) {
-                                console.log(item);
-                                selector += '<li>'+item+'</li>';
-                            })
-                            jQuery('.input-selector ul').html(selector);
-
-                        }else{
-                            jQuery('.input-selector ul').html('');
-                        }
-
-                        new_code = JSON.stringify(new_code);
-
-
-                    }
-
-                    jQuery('.code-preview textarea').val(new_code);
-
-                    //editor.setValue(new_code);
-
-                    //return new_code;
-                    //}
-
-
-
-                }
-
-
-            </script>
 
         </div>
     </div>
